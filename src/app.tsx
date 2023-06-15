@@ -15,9 +15,10 @@ type Todo = {
   date: Date;
 };
 
+const initializeTodo = (JSON.parse(localStorage.getItem('todos') ?? '[]') as Todo[]).map((todo) => ({ ...todo, date: new Date(todo.date) }));
 export function App() {
   const [date, setDate] = React.useState<Date>(new Date());
-  const [todos, setTodos] = React.useState<Todo[]>([]);
+  const [todos, setTodos] = React.useState<Todo[]>(initializeTodo);
   const [isAddTodo, setIsAddTodo] = React.useState<boolean>(false);
   const [editTodoId, setEditTodoId] = React.useState<number | null>(null);
 
@@ -31,23 +32,25 @@ export function App() {
 
   const handleDeleteTodo = (id: number) => {
     return () => {
-      setTodos((prev) => prev.filter((todo) => todo.id !== id));
+      const deletedTodo = todos.filter((todo) => todo.id !== id);
+      setTodos(deletedTodo);
+      localStorage.setItem('todos', JSON.stringify(deletedTodo));
     };
   };
 
   const handleToggleTodo = (id: number) => {
     return () => {
-      setTodos((prev) =>
-        prev.map((todo) => {
-          if (todo.id === id) {
-            return {
-              ...todo,
-              isDone: !todo.isDone,
-            };
-          }
-          return todo;
-        })
-      );
+      const clearTodo = todos.map((todo) => {
+        if (todo.id === id) {
+          return {
+            ...todo,
+            isDone: !todo.isDone,
+          };
+        }
+        return todo;
+      });
+      setTodos(clearTodo);
+      localStorage.setItem('todos', JSON.stringify(clearTodo));
     };
   };
 
@@ -71,6 +74,9 @@ export function App() {
     };
 
     setTodos((prev) => [...prev, newTodo]);
+    const exsistingTodo = JSON.parse(localStorage.getItem('todos') ?? '[]') as Todo[];
+    exsistingTodo.push(newTodo);
+    localStorage.setItem('todos', JSON.stringify(exsistingTodo));
 
     setIsAddTodo(false);
   };
@@ -88,17 +94,17 @@ export function App() {
         return;
       }
 
-      setTodos((prev) =>
-        prev.map((todo) => {
-          if (todo.id === id) {
-            return {
-              ...todo,
-              title: title,
-            };
-          }
-          return todo;
-        })
-      );
+      const editTodo = todos.map((todo) => {
+        if (todo.id === id) {
+          return {
+            ...todo,
+            title: title,
+          };
+        }
+        return todo;
+      });
+      setTodos(editTodo);
+      localStorage.setItem('todos', JSON.stringify(editTodo));
 
       setEditTodoId(null);
     };
